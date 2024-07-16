@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P.E.T.e</title>
+<!--    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">-->
+    <link rel="stylesheet" href="https://pete.flinnsci.com:5000{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+    body {
+        background-image: url('{{ url_for('static', filename='5655049.jpg') }}');
+        background-size: cover;
+        background-repeat: no-repeat;
+    }
+    .container {
+        padding: 20px;
+        margin: 0 auto;
+        width: 80%;
+        background-color: rgba(255, 255, 255, 0.8);
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .nav-container {
+        background-color: #334376;
+        border-radius: 15px;
+        padding: 10px;
+        margin-bottom: 20px;
+    }
+    .nav-links {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        text-align: center;
+    }
+    .nav-links li {
+        display: inline;
+        margin-right: 20px;
+    }
+    .nav-links li a {
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 18px;
+        font-weight: bold;
+        padding: 10px;
+    }
+    .nav-links li a:hover {
+        background-color: #0055cc;
+        border-radius: 10px;
+    }
+    .scripts-container {
+        background-color: #f1f9fd;
+        padding: 20px;
+        border-radius: 10px;
+        color: #334376;
+    }
+    label {
+        font-weight: bold;
+        font-size: 20px;
+        color: #334376;
+        text-transform: capitalize;
+    }
+    .script-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+    .script-container {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        background-color: rgba(0, 138, 83, 0.25) !important;
+        padding: 10px !important;
+        gap: 10px;
+        width: 30%;
+        margin-bottom: 20px;
+    }
+    .button-container {
+        margin-top: 20px;
+        display: flex;
+        justify-content: space-between;
+    }
+    .button {
+        width: 250px;
+        height: 35px;
+        font-size: 16px;
+        padding: 10px;
+        border: none;
+        border-radius: 25px;
+        color: white;
+    }
+    .run-button {
+        background-color: #15a65e;
+    }
+    .stop-button {
+        background-color: grey;
+    }
+    .stop-button:disabled {
+        background-color: grey;
+    }
+    input[type="checkbox"] {
+        margin-left: 70px;
+        width: 20px;
+        height: 20px;
+        transform: scale(.7);
+        margin-right: 1px;
+    }
+    .schedule-section {
+        background-color: rgba(4, 10, 122, 0.11);
+        display: none;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+        color: #ffffff;
+    }
+    input[type="date"],
+    input[type="time"] {
+        width: 300px;
+        height: 40px;
+        font-size: 18px;
+        padding: 5px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        margin-bottom: 10px;
+    }
+    .schedule-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+    }
+    .schedule-buttons .button {
+        width: 250px%;
+        background-color: #15a65e
+    }
+    .toggle-button {
+        background-color: #15a65e;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-bottom: 20px;
+    }
+    .toggle-button.collapsed {
+        background-color: #6c757d;
+    }
+    .scheduled-task {
+        background-color: rgba(0, 138, 83, 0.25);
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 20px;
+    }
+    .popup {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 400px;
+        padding: 20px;
+        background-color: white;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        border-radius: 10px;
+    }
+    .popup h3 {
+        margin-top: 0;
+    }
+    .popup .form-group {
+        margin-bottom: 15px;
+    }
+    .popup .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    .popup .form-group input[type="date"],
+    .popup .form-group input[type="time"],
+    .popup .form-group select {
+        width: 100%;
+        padding: 5px;
+        font-size: 16px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+    .popup .form-actions {
+        text-align: right;
+    }
+    .popup .form-actions button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+    .popup .form-actions .cancel-button {
+        background-color: grey;
+        color: white;
+        margin-right: 10px;
+    }
+    .popup .form-actions .save-button {
+        background-color: #28a745;
+        color: white;
+    }
+    .schedule-date-time {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+    .schedule-date-time .form-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    .schedule-date-time input,
+    .schedule-date-time select {
+        width: 100%;
+        font-size: 16px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+    .logo {
+        width: 150px;
+        height: auto;
+        display: block;
+    }
+    .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+<!--        padding: 1px;-->
+    }
+    h1 {
+        text-align: center;
+        margin: 0;
+        font-family: 'Anton';
+    }
+    .repeat-dropdown {
+        width: 150px;
+        height: 50px;
+        font-size: 16px;
+        padding: 5px 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+    .repeat-dropdown::-ms-expand {
+        display: none;
+    }
+    .repeat-dropdown:focus {
+        outline: none;
+        border-color: #007bff;
+    }
+    .repeat-dropdown {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+        background-repeat: no-repeat;
+        background-position-x: calc(100% - 10px);
+        background-position-y: 50%;
+    }
+
+    .digital-marketing-logo {
+    width: 350px; /* Adjust this value as needed */
+    height: 150px; /* Adjust this value as needed */
+<!--    object-fit: contain; /* This ensures the image is scaled properly within the dimensions */-->
+}
+        .scripts-container {
+    background-color: #f1f9fd;
+    padding: 20px;
+    border-radius: 10px;
+    color: #334376;
+    margin-bottom: 20px;
+}
+
+.schedule-content {
+
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.schedule-date-time {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.schedule-date-time .form-group {
+    width: 30%;
+    margin-bottom: 10px;
+}
+
+.schedule-date-time label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.schedule-date-time input,
+.schedule-date-time select {
+    width: 100%;
+    padding: 5px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.schedule-buttons {
+    display: flex;
+    justify-content: space-between;
+}
+
+.schedule-buttons .button {
+
+    height: 35px;
+    font-size: 16px;
+    padding: 5px;
+    border: none;
+    border-radius: 25px;
+    color: white;
+    background-color: #15a65e;
+}
+
+#toggle-schedule-button {
+    margin-bottom: 20px;
+}
+ @keyframes countChange {
+    0% { color: #28a745; transform: scale(1.2); }
+    50% { color: #dc3545; transform: scale(1.5); }
+    100% { color: #28a745; transform: scale(1.2); }
+}
+
+.url-count {
+    font-weight: bold;
+    font-size: 1.2em;
+    transition: color 0.3s ease;
+}
+
+.url-count.updated {
+    animation: countChange 2s ease;
+}
+        .user-section {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.user-section {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    background-color: #334376;
+    color: white;
+    border-radius: 40px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+.user-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-right: 10px;
+    border: 2px solid white;
+    transition: transform 0.3s ease;
+}
+
+.user-name {
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 0;
+    opacity: 0;
+    transition: max-width 0.3s ease, opacity 0.3s ease, margin-right 0.3s ease;
+}
+
+.user-dropdown {
+<!--    padding: 10px 15px;-->
+    opacity: 0;
+    max-width: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.logout-button {
+    background-color: #15a65e;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    white-space: nowrap;
+}
+
+.logout-button:hover {
+    background-color: #0f8c4f;
+}
+
+.user-section:hover {
+    padding-right: 15px;
+}
+
+.user-section:hover .user-avatar {
+    transform: scale(1.1);
+}
+
+.user-section:hover .user-name {
+    max-width: 150px;
+    opacity: 1;
+    margin-right: 15px;
+}
+
+.user-section:hover .user-dropdown {
+    opacity: 1;
+    max-width: 100px;
+}
+        #notification-container {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+}
+
+.notification {
+    background-color: #e99d1e80;
+    color: black;
+    padding: 16px;
+    margin-bottom: 10px;
+    border-radius: 30px;
+    opacity: 1;
+    transition: opacity 0.5s;
+    text-align: left;
+}
+
+.notification.fade-out {
+    opacity: 0;
+}
+        .script-containers {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        padding: 10px !important;
+        gap: 10px;
+        width: 30%;
+        margin-bottom: 20px;
+    }
+
+
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;  /* Reduced from 60px */
+  height: 20px; /* Reduced from 24px */
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;  /* Reduced from 26px */
+  width: 16px;   /* Reduced from 26px */
+  left: 2px;     /* Adjusted from 4px */
+  bottom: 2px;   /* Adjusted from 4px */
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);  /* Adjusted from 26px */
+}
+
+.slider.round {
+  border-radius: 20px;  /* Adjusted from 34px */
+}
+
+.slider.round:before {
+  border-radius: 50%;  /* Changed to 50% for a perfect circle */
+}
+    </style>
+</head>
+<body>
+<div class="user-section">
+    <div class="user-info">
+<!--        <img src="{{ url_for('static', filename='user.png') }}" alt="User Avatar" class="user-avatar">-->
+        <img src="{{ url_for('static', filename='profile.png') }}" alt="User Avatar" class="user-avatar" onerror="this.onerror=null; this.src='{{ url_for('static', filename='default-avatar.png') }}'; console.log('Failed to load user avatar');">
+        <span class="user-name">{{ username }}</span>
+        <span class="expand-icon">▼</span>
+    </div>
+    <div class="user-dropdown">
+        <form action="/logout" method="POST" class="logout-form">
+            <button type="submit" class="logout-button">Logout</button>
+        </form>
+    </div>
+</div>
+    <div class="container">
+        <div class="header">
+            <img src="{{ url_for('static', filename='FlinnLogo.png') }}" alt="Logo" class="logo">
+            <img src="{{ url_for('static', filename='P.E.T.e logo.png') }}" alt="Logo" class="logo digital-marketing-logo">
+<!--            <h1>P.E.T.e</h1>-->
+        </div>
+        <div class="nav-container">
+            <ul class="nav-links">
+                <li><a href="/">Scrape Products</a></li>
+                <li><a href="/settings">Settings</a></li>
+
+            </ul>
+        </div>
+        <div class="scripts-container">
+    <form id="script-form">
+        <h2>Select Sites to Scrape:</h2>
+        <div class="script-row">
+            {% for script in scripts %}
+                {% if script != 'Run_Comparison.py' %}
+                    <div class="script-container">
+                        <input type="checkbox" id="{{ script }}" name="scripts" value="{{ script }}">
+                        <label for="{{ script }}">{{ script[:-3]|capitalize }}</label>
+                    </div>
+                    {% if loop.index % 3 == 0 %}
+                        </div>
+                        <div class="script-row">
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </div>
+    </form>
+</div>
+<div class="run-comparison-container">
+    <form id="run-comparison-form">
+        <div class="script-containers">
+            <h2>Run Comparison </h2>
+            <label class="switch">
+                <input type="checkbox" id="run-comparison-toggle" name="Run_Comparison.py">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </form>
+</div>
+        <div class="button-container">
+            <button id="run-button" class="button run-button" type="button">Run</button>
+            <button id="stop-button" class="button stop-button" type="button" disabled>Stop</button>
+        </div>
+        <div id="scheduled-task-display" class="scheduled-task" style="display: none;">
+            <h3>Scheduled Task</h3>
+            <p id="scheduled-task-info"></p>
+        </div>
+        <button id="toggle-schedule-button" class="toggle-button collapsed" type="button">Show Schedule Options</button>
+        <div class="scripts-container" id="schedule-section" style="display: none;">
+    <h2>Schedule Scripts:</h2>
+    <div class="schedule-content">
+        <div class="schedule-date-time">
+           <div class="form-group">
+    <label for="start-date">Start Date:</label>
+    <input type="date" id="start-date" name="start-date" min="">
+</div>
+            <div class="form-group">
+    <label for="start-time">Start Time:</label>
+    <input type="time" id="start-time" name="start-time" min="">
+</div>
+            <div class="form-group">
+                <label for="recurrence-type">Repeat:</label>
+                <select id="recurrence-type" name="recurrence-type" class="repeat-dropdown">
+                    <option value="once">Once</option>
+                    <option value="monthly">Monthly</option>
+                </select>
+            </div>
+        </div>
+        <div class="schedule-buttons">
+            <button id="schedule-button" class="button" type="button">Schedule</button>
+            <button id="stop-schedule-button" class="button" type="button">Stop Scheduling</button>
+        </div>
+    </div>
+</div>
+        <div id="consoles-container" class="scripts-container">
+    <h2>Console Output:</h2>
+    <div id="consoles"></div>
+</div>
+    </div>
+
+    <script>
+
+        const socket = io();
+
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+
+        socket.on('tasks_updated', function(data) {
+    console.log('Received tasks update:', data);
+    document.getElementById('scheduled-task-info').textContent = '';
+    updateScheduledTaskDisplay(data.tasks);
+});
+
+socket.on('state_update', (state) => {
+    console.log('Received state update:', state);
+    if (state && Object.keys(state).length > 0) {
+        updateButtonStates(state);
+    } else {
+        console.warn('Received empty state update');
+    }
+});
+
+        socket.on('script_update', (data) => {
+            console.log('Received script update:', data);
+            createOrUpdateConsoleDiv(data.script_name, data.status, extractUrlCount(data.status));
+        });
+
+        socket.on('schedule_update', (data) => {
+            console.log('Received schedule update:', data);
+            updateScheduledTaskDisplay(data.tasks);
+        });
+
+        socket.on('all_stopped', (data) => {
+            console.log('All tasks stopped:', data);
+            alert(data.status);
+        });
+
+        socket.on('error', (data) => {
+            console.error('Received error:', data);
+            alert(data.message);
+        });
+
+
+
+
+        console.log('JavaScript loaded');
+        const baseUrl = 'https://pete.flinnsci.com:5000';
+
+document.getElementById('stop-button').addEventListener('click', function() {
+     socket.emit('stop_scripts');
+     sendNotification(
+        'Scrapping Stopped',
+        `All process have been stopped\n` +
+        `Time of start: ${new Date().toLocaleString()}\n\n` +
+        'Thanks\n' +
+        'Admin - P.E.T.e'
+    );
+
+    fetch(`${baseUrl}/stop_scripts`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+    }).then(response => response.json())
+    .then(data => {
+        console.log("Stop scripts response:", data);
+        updateButtonStates(data);
+
+        let consolesDiv = document.getElementById('consoles');
+        let consoleDivs = consolesDiv.getElementsByClassName('console-box');
+        Array.from(consoleDivs).forEach(consoleDiv => {
+            let statusP = consoleDiv.querySelector('p');
+            if (statusP) {
+                statusP.textContent = 'Status: Stopped';
+            }
+        });
+
+        // Update the state after updating console divs
+        updateState({
+            run_button_disabled: false,
+            stop_button_disabled: true,
+            schedule_button_disabled: false,
+            stop_schedule_button_disabled: true
+        });
+
+        // Stop updating status
+        clearInterval(statusUpdateInterval);
+    })
+    .catch(error => {
+        console.error('Error stopping scripts:', error);
+        // If there's an error, fetch the current state
+        fetch(`${baseUrl}/get_state`)
+            .then(response => response.json())
+            .then(state => {
+                console.log("Fetched current state:", state);
+                updateButtonStates(state);
+            })
+            .catch(stateError => console.error('Error fetching state:', stateError));
+    });
+});
+
+let comparisonRunOnce = false;
+let comparisonV1RunOnce = false;
+let completedScriptsCount = 0;
+
+function checkCompletion(selectedScripts, runComparisonEnabled) {
+    console.log(selectedScripts);
+     console.log('outside_interval')
+    let fisherScript = 'Fisher Products.py';
+
+    let interval = setInterval(() => {
+
+        fetch(`${baseUrl}/status`)
+            .then(response => response.json())
+            .then(statusData => {
+                // Get scripts that have completed except Fisher_Products.py
+                const completedScriptsExceptFisher = selectedScripts
+                    .filter(script => script !== fisherScript && statusData[script] && statusData[script].includes('Completed'));
+
+                const allCompletedExceptFisher = completedScriptsExceptFisher.length === selectedScripts.filter(script => script !== fisherScript).length;
+                const fisherCompleted = statusData['Fisher Products.py'] && statusData['Fisher Products.py'].includes('Completed');
+
+                if (allCompletedExceptFisher && !fisherCompleted && !comparisonRunOnce && runComparisonEnabled) {
+                    comparisonRunOnce = true; // Set flag to true to prevent multiple executions
+
+                    // Generate and send completion email for all except Fisher_Products.py
+                    getClientIP().then(ip => {
+                        sendEmail(
+                            "Scripts Execution Completed",
+                            `Run Comparison scripts have started execution.\n\n` +
+                            `IP address: ${ip}\n\n` +
+                            `Completed Scripts (${completedScriptsExceptFisher.length}):\n${completedScriptsExceptFisher.join('\n')}\n\n` +
+                            `Run Comparison Enabled: ${runComparisonEnabled}\n\n` +
+                            `Time of completion: ${new Date().toLocaleString()}`
+                        );
+                    });
+
+                    // Run comparisons for all scripts except Fisher_Products.py
+                    runComparisonForScripts(completedScriptsExceptFisher, () => {
+                        console.log('Comparison completed for all scripts except Fisher_Products.py');
+                    });
+                }
+
+                if (allCompletedExceptFisher && fisherCompleted) {
+                    if (!comparisonV1RunOnce) {
+                        comparisonV1RunOnce = true;
+                        runComparison_v1(selectedScripts, () => {
+                            console.log('Comparison v1 completed for all scripts including Fisher_Products.py');
+                        });
+                    }
+                    getClientIP().then(ip => {
+                        sendEmail(
+                            "Scripts Execution Completed",
+                            `All selected scripts have completed execution.\n\n` +
+                            `IP address: ${ip}\n\n` +
+                            `Completed Scripts (${selectedScripts.length}):\n${selectedScripts.join('\n')}\n\n` +
+                            `Run Comparison Enabled: ${runComparisonEnabled}\n\n` +
+                            `Time of completion: ${new Date().toLocaleString()}`
+                        );
+                    });
+
+                    clearInterval(interval);
+                }
+            });
+    }, 1000); // Poll every second
+}
+
+document.getElementById('run-button').addEventListener('click', function() {
+    let formData = new FormData(document.getElementById('script-form'));
+    let runComparisonEnabled = document.getElementById('run-comparison-toggle').checked;
+    let selectedScripts = formData.getAll('scripts');
+        socket.emit('run_scripts', { scripts: selectedScripts });
+    console.log('Run Comparison running', runComparisonEnabled);
+    console.log('outside_interval')
+    getClientIP().then(ip => {
+        sendEmail(
+            "Script Run Started",
+            `A script run has been started from IP address: ${ip}\n\n` +
+            `Selected Scripts (${selectedScripts.length}):\n${selectedScripts.join('\n')}\n\n` +
+            `Run Comparison Enabled: ${runComparisonEnabled}`
+        );
+    });
+checkCompletion(selectedScripts, runComparisonEnabled);
+    fetch(`${baseUrl}/run_scripts`, {
+        method: 'POST',
+        body: new URLSearchParams(formData)
+    }).then(response => response.json())
+        .then(data => {
+        console.log("Response from run_scripts:", data);
+            let consolesDiv = document.getElementById('consoles');
+            consolesDiv.innerHTML = '';
+            selectedScripts.forEach(script => {
+                let consoleDiv = document.createElement('div');
+                consoleDiv.id = `console-${script}`;
+                consoleDiv.className = 'console-box';
+                consoleDiv.innerHTML = `<h3>${script}</h3><p>Status: Running</p><p>URLs Scraped: 0</p>`;
+                consolesDiv.appendChild(consoleDiv);
+            });
+            updateStatus();
+            document.getElementById('run-button').disabled = true;
+            document.getElementById('stop-button').disabled = false;
+            document.getElementById('schedule-button').disabled = true;
+            document.getElementById('stop-schedule-button').disabled = true;
+            document.querySelectorAll('input[id="run-comparison-toggle"]').forEach(checkbox => {
+                checkbox.disabled = true;
+            });
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.disabled = true;
+            });
+
+            saveState(); // Save state immediately after updating UI
+            checkCompletion(selectedScripts, runComparisonEnabled);
+
+        });
+});
+
+
+
+function removeConsoleDiv() {
+    let parentDiv = document.getElementById('consoles');
+    let childDiv = document.getElementById('consolescomp');
+    if (parentDiv && childDiv) {
+        parentDiv.removeChild(childDiv);
+    }
+}
+
+function runComparisonForScripts(scripts, callback) {
+    console.log("Comparison started for scripts", scripts);
+    fetch(`${baseUrl}/run_comparison`, {
+        method: 'POST',
+        body: new URLSearchParams({ scripts: 'Run_Comparison.py', related_scripts: scripts.join(',') })
+    })
+    .then(response => response.json())
+    .then(data => {
+        updateStatus();
+        removeConsoleDiv();
+        if (callback) callback();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Update status to 'Fail' in case of error
+    });
+}
+
+function runComparison_v1(scripts, callback) {
+    console.log("Comparison started for scripts", scripts);
+    fetch(`${baseUrl}/run_comparison_v1`, {
+        method: 'POST',
+        body: new URLSearchParams({ scripts: 'Fisher_Comparison.py', related_scripts: scripts.join(',') })
+    })
+    .then(response => response.json())
+    .then(data => {
+        updateStatus();
+        removeConsoleDiv();
+        if (callback) callback();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Update status to 'Fail' in case of error
+    });
+}
+
+function resetUI() {
+    document.getElementById('run-button').disabled = false;
+    document.getElementById('stop-button').disabled = true;
+    document.getElementById('schedule-button').disabled = false;
+    document.getElementById('stop-schedule-button').disabled = true;
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.disabled = false;
+    });
+
+    saveState(); // Save state immediately after updating UI
+}
+
+
+
+<!--document.getElementById('run-button').addEventListener('click', function() {-->
+<!--    let formData = new FormData(document.getElementById('script-form'));-->
+<!--    let runComparisonEnabled = document.getElementById('run-comparison-toggle').checked;-->
+<!--    let scripts = formData.getAll('scripts');-->
+<!--            socket.emit('run_scripts', { scripts: scripts });-->
+<!--    console.log(runComparisonEnabled);-->
+<!--    sendNotification(-->
+<!--        "Started Scrapping",-->
+<!--        `Sites: ${scripts.join(', ')}\n\n` +-->
+<!--        `Time of start: ${new Date().toLocaleString()}\n\n` +-->
+<!--        'Thanks\n' +-->
+<!--        'Admin - P.E.T.e'-->
+<!--    );-->
+<!--    fetch(`${baseUrl}/run_scripts`, {-->
+<!--        method: 'POST',-->
+<!--        body: new URLSearchParams(formData)-->
+<!--    }).then(response => response.json())-->
+<!--    .then(data => {-->
+<!--        console.log("Run scripts response:", data);-->
+<!--        updateButtonStates(data);-->
+
+<!--        let selectedScripts = formData.getAll('scripts');-->
+<!--        let consolesDiv = document.getElementById('consoles');-->
+<!--        consolesDiv.innerHTML = '';-->
+<!--        selectedScripts.forEach(script => {-->
+<!--            let consoleDiv = document.createElement('div');-->
+<!--            consoleDiv.id = `console-${script}`;-->
+<!--            consoleDiv.className = 'console-box';-->
+<!--            consoleDiv.innerHTML = `<h3>${script}</h3><p>Status: Running</p><p>URLs Scraped: 0</p>`;-->
+<!--            consolesDiv.appendChild(consoleDiv);-->
+<!--        });-->
+
+<!--        // Update the state after setting up the console divs-->
+<!--        updateState({-->
+<!--            run_button_disabled: true,-->
+<!--            stop_button_disabled: false,-->
+<!--            schedule_button_disabled: true,-->
+<!--            stop_schedule_button_disabled: true-->
+<!--        });-->
+
+<!--        // Start updating status-->
+<!--        updateStatus();-->
+<!--        checkCompletion(selectedScripts, runComparisonEnabled);-->
+<!--    })-->
+<!--    .catch(error => {-->
+<!--        console.error('Error running scripts:', error);-->
+<!--        // If there's an error, fetch the current state-->
+<!--        fetch(`${baseUrl}/get_state`)-->
+<!--            .then(response => response.json())-->
+<!--            .then(state => {-->
+<!--                console.log("Fetched current state:", state);-->
+<!--                updateButtonStates(state);-->
+<!--            })-->
+<!--            .catch(stateError => console.error('Error fetching state:', stateError));-->
+<!--    });-->
+<!--});-->
+
+<!--let comparisonRunOnce = false;-->
+<!--let comparisonV1RunOnce = false;-->
+<!--let completedScriptsCount = 0;-->
+
+<!--function checkCompletion(selectedScripts, runComparisonEnabled) {-->
+<!--    console.log('Selected scripts:', selectedScripts);-->
+<!--    console.log('Run comparison enabled:', runComparisonEnabled);-->
+<!--    let fisherScript = 'Fisher Products.py';-->
+<!--    let interval = setInterval(() => {-->
+<!--        fetch(`${baseUrl}/status`)-->
+<!--            .then(response => response.json())-->
+<!--            .then(statusData => {-->
+<!--                console.log('Status data:', statusData);-->
+
+<!--                // Get scripts that have completed except Fisher Products.py-->
+<!--                const completedScriptsExceptFisher = selectedScripts-->
+<!--                    .filter(script => script !== fisherScript && statusData[script] && statusData[script].includes('Completed'));-->
+<!--                const allCompletedExceptFisher = completedScriptsExceptFisher.length === selectedScripts.filter(script => script !== fisherScript).length;-->
+<!--                const fisherCompleted = statusData['Fisher Products.py'] && statusData['Fisher Products.py'].includes('Completed');-->
+
+<!--                console.log('Completed scripts except Fisher:', completedScriptsExceptFisher);-->
+<!--                console.log('All completed except Fisher:', allCompletedExceptFisher);-->
+<!--                console.log('Fisher completed:', fisherCompleted);-->
+<!--                console.log('Comparison run once:', comparisonRunOnce);-->
+
+<!--                if (allCompletedExceptFisher && !fisherCompleted && !comparisonRunOnce && runComparisonEnabled) {-->
+<!--                    console.log('Conditions met for running comparison');-->
+<!--                    comparisonRunOnce = true; // Set flag to true to prevent multiple executions-->
+<!--                    // Generate and send completion email for all except Fisher Products.py-->
+<!--                    sendNotification(-->
+<!--                        "Scrapping Sites are Completed",-->
+<!--                        `Completed Sites: (${completedScriptsExceptFisher.length}):\n${completedScriptsExceptFisher.join('\n')}\n\n` +-->
+<!--                        `Run Comparison Enabled: ${runComparisonEnabled}\n\n` +-->
+<!--                        `Time of start: ${new Date().toLocaleString()}\n\n` +-->
+<!--                        'Thanks\n' +-->
+<!--                        'Admin - P.E.T.e'-->
+<!--                    );-->
+<!--                    // Run comparisons for all scripts except Fisher Products.py-->
+<!--                    runComparisonForScripts(completedScriptsExceptFisher, () => {-->
+<!--                        console.log('Comparison completed for all scripts except Fisher Products.py');-->
+<!--                    });-->
+<!--                    sendNotification(-->
+<!--                        `Run Comparison: Started\n\n` +-->
+<!--                        `Time of start: ${new Date().toLocaleString()}\n\n` +-->
+<!--                        'Thanks\n' +-->
+<!--                        'Admin - P.E.T.e'-->
+<!--                    );-->
+<!--                } else {-->
+<!--                    console.log('Conditions not met for running comparison');-->
+<!--                }-->
+
+<!--                if (allCompletedExceptFisher && fisherCompleted) {-->
+<!--                    if (!comparisonV1RunOnce) {-->
+<!--                        console.log('Running comparison v1');-->
+<!--                        comparisonV1RunOnce = true;-->
+<!--                        runComparison_v1(selectedScripts, () => {-->
+<!--                            console.log('Comparison v1 completed for all scripts including Fisher_Products.py');-->
+<!--                        });-->
+<!--                    }-->
+<!--                    // Generate and send completion email for all scripts-->
+<!--                    sendNotification(-->
+<!--                        "Scrapping Sites are Completed",-->
+<!--                        `Fisher Site Completed and All other sites are completed\n` +-->
+<!--                        `Completed Sites: ${selectedScripts.join(', ')}\n\n` +-->
+<!--                        `Run Comparison Enabled: ${runComparisonEnabled}\n\n` +-->
+<!--                        `Time of start: ${new Date().toLocaleString()}\n\n` +-->
+<!--                        'Thanks\n' +-->
+<!--                        'Admin - P.E.T.e'-->
+<!--                    );-->
+
+<!--                    // Clear the interval when all scripts are completed-->
+<!--                    clearInterval(interval);-->
+<!--                }-->
+<!--            })-->
+<!--            .catch(error => {-->
+<!--                console.error('Error fetching status:', error);-->
+<!--            });-->
+<!--    }, 5000); // Poll every 5 seconds instead of every second to reduce server load-->
+<!--}-->
+
+<!--function runComparisonForScripts(scripts, callback) {-->
+<!--    console.log("Comparison started for scripts", scripts);-->
+<!--    fetch(`${baseUrl}/run_comparison`, {-->
+<!--        method: 'POST',-->
+<!--        body: new URLSearchParams({ scripts: 'Run_Comparison.py', related_scripts: scripts.join(',') })-->
+<!--    })-->
+<!--    .then(response => response.json())-->
+<!--    .then(data => {-->
+<!--        console.log('Comparison response:', data);-->
+<!--        updateStatus();-->
+<!--        if (callback) callback();-->
+<!--    })-->
+<!--    .catch(error => {-->
+<!--        console.error('Error running comparison:', error);-->
+<!--        // Update status to 'Fail' in case of error-->
+<!--    });-->
+<!--}-->
+
+<!--function runComparison_v1(scripts, callback) {-->
+<!--    console.log("Comparison v1 started for scripts", scripts);-->
+<!--    fetch(`${baseUrl}/run_comparison_v1`, {-->
+<!--        method: 'POST',-->
+<!--        body: new URLSearchParams({ scripts: 'Fisher_Comparison.py', related_scripts: scripts.join(',') })-->
+<!--    })-->
+<!--    .then(response => response.json())-->
+<!--    .then(data => {-->
+<!--        console.log('Comparison v1 response:', data);-->
+<!--        updateStatus();-->
+<!--        if (callback) callback();-->
+<!--    })-->
+<!--    .catch(error => {-->
+<!--        console.error('Error running comparison v1:', error);-->
+<!--        // Update status to 'Fail' in case of error-->
+<!--    });-->
+<!--}-->
+
+<!--function removeConsoleDiv() {-->
+<!--    let parentDiv = document.getElementById('consoles');-->
+<!--    let childDiv = document.getElementById('consolescomp');-->
+<!--    if (parentDiv && childDiv) {-->
+<!--        parentDiv.removeChild(childDiv);-->
+<!--    }-->
+<!--}-->
+
+<!--function resetUI() {-->
+<!--    document.getElementById('run-button').disabled = false;-->
+<!--    document.getElementById('stop-button').disabled = true;-->
+<!--    document.getElementById('schedule-button').disabled = false;-->
+<!--    document.getElementById('stop-schedule-button').disabled = true;-->
+<!--    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {-->
+<!--        checkbox.disabled = false;-->
+<!--    });-->
+
+<!--    saveState(); // Save state immediately after updating UI-->
+<!--}-->
+
+
+
+function sendNotification(subject, message) {
+    console.log("Sending notification:", subject, message);
+    fetch(`${baseUrl}/send_notification`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            subject: subject,
+            message: message
+        })
+    }).then(response => response.json())
+    .then(data => {
+        console.log('Notification sent:', data);
+    })
+    .catch((error) => {
+        console.error('Error sending notification:', error);
+    });
+}
+
+document.getElementById('schedule-button').addEventListener('click', function() {
+    let formData = new FormData(document.getElementById('script-form'));
+    let checkedScripts = document.querySelectorAll('input[name="scripts"]:checked');
+    let scripts = formData.getAll('scripts');
+    let startDate = document.getElementById('start-date').value;
+    let startTime = document.getElementById('start-time').value;
+    let recurrenceType = document.getElementById('recurrence-type').value;
+
+    if (checkedScripts.length > 0) {
+        checkedScripts.forEach(script => {
+            formData.append('scripts', script.value);
+        });
+
+        formData.append('start-date', startDate);
+        formData.append('start-time', startTime);
+        formData.append('recurrence-type', recurrenceType);
+
+        fetch(`${baseUrl}/schedule_scripts`, {
+            method: 'POST',
+            body: formData
+        }).then(response => response.json())
+        .then(data => {
+            console.log("Schedule scripts response:", data);
+            if (data.status.startsWith('Scheduled')) {
+                updateScheduledTaskDisplay(data.tasks);
+                displayScheduledTask(data.status);
+                updateButtonStates({
+                    run_button_disabled: true,
+                    stop_button_disabled: true,
+                    schedule_button_disabled: true,
+                    stop_schedule_button_disabled: false
+                });
+                document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.disabled = true;
+                });
+                updateState({
+                    run_button_disabled: true,
+                    stop_button_disabled: true,
+                    schedule_button_disabled: true,
+                    stop_schedule_button_disabled: false
+                });
+
+                // Send notification here
+                sendNotification(
+                    'Scrapping Scheduled',
+                    `A task has been scheduled with the following details:\n\n` +
+                    `Scripts: ${scripts.join(', ')}\n` +
+                    `Start Date: ${startDate}\n` +
+                    `Start Time: ${startTime}\n` +
+                    `Recurrence Type: ${recurrenceType}\n\n` +
+                    `Time of scheduling: ${new Date().toLocaleString()}\n` +
+                    '\nThanks,\nAdmin - P.E.T.e'
+                );
+
+            } else {
+                console.error('Scheduling error:', data.status);
+                alert('Error scheduling script: ' + data.status);
+            }
+        }).catch(error => {
+            console.error('Error scheduling script:', error);
+            alert('An error occurred while scheduling the script. Please try again.');
+        });
+    } else {
+        alert('Please select a script to schedule.');
+    }
+});
+
+document.getElementById('toggle-schedule-button').addEventListener('click', function() {
+    const scheduleSection = document.getElementById('schedule-section');
+    const toggleButton = document.getElementById('toggle-schedule-button');
+
+    if (scheduleSection.style.display === 'none') {
+        scheduleSection.style.display = 'block';
+        toggleButton.textContent = 'Hide Schedule Options';
+        toggleButton.classList.remove('collapsed');
+    } else {
+        scheduleSection.style.display = 'none';
+        toggleButton.textContent = 'Show Schedule Options';
+        toggleButton.classList.add('collapsed');
+    }
+});
+
+function displayScheduledTask(status) {
+    console.log("Displaying scheduled task:", status);
+
+    let scheduledTaskInfo = document.getElementById('scheduled-task-info');
+    let scheduledTaskDisplay = document.getElementById('scheduled-task-display');
+
+    if (status && status.startsWith('Scheduled')) {
+        scheduledTaskInfo.textContent = `Scheduled Task: ${status}`;
+        scheduledTaskDisplay.style.display = 'block';
+
+        updateButtonStates({
+            run_button_disabled: true,
+            stop_button_disabled: true,
+            schedule_button_disabled: true,
+            stop_schedule_button_disabled: false
+        });
+
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.disabled = true;
+        });
+
+        updateState();
+        saveState();
+    } else {
+        console.error('Unexpected status when displaying scheduled task:', status);
+        scheduledTaskInfo.textContent = 'Error: Unable to display scheduled task';
+        scheduledTaskDisplay.style.display = 'block';
+
+        // Fetch current state to ensure UI is consistent
+        fetch(`${baseUrl}/get_state`)
+            .then(response => response.json())
+            .then(state => {
+                console.log("Fetched current state:", state);
+                updateButtonStates(state);
+            })
+            .catch(stateError => console.error('Error fetching state:', stateError));
+    }
+}
+
+function updateStatus() {
+    fetch('/status')
+        .then(response => response.json())
+        .then(data => {
+            Object.keys(data).forEach(scriptName => {
+                let statusText = data[scriptName];
+                let urlCount = 0;
+                let match = statusText.match(/URLs scraped: (\d+)/);
+                if (match) {
+                    urlCount = parseInt(match[1]);
+                }
+                let status = statusText.split('(')[0].trim();
+
+                createOrUpdateConsoleDiv(scriptName, status, urlCount);
+            });
+            saveState();
+            setTimeout(updateStatus, 1000);
+        });
+}
+
+updateStatus();
+
+
+document.getElementById('stop-schedule-button').addEventListener('click', function() {
+    fetch(`${baseUrl}/stop_scheduled_scripts`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Stop scheduled scripts response:", data);
+        updateScheduledTaskDisplay([]);
+        updateButtonStates({
+            run_button_disabled: false,
+            stop_button_disabled: true,
+            schedule_button_disabled: false,
+            stop_schedule_button_disabled: true
+        });
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.disabled = false;
+        });
+        updateState({
+            run_button_disabled: false,
+            stop_button_disabled: true,
+            schedule_button_disabled: false,
+            stop_schedule_button_disabled: true
+        });
+
+        sendNotification(
+            'Scrapping Scheduled Stopped',
+            `All scheduled tasks and running scripts have been stopped.\n\n` +
+            `Time of scheduling: ${new Date().toLocaleString()}\n\n` +
+            'Thanks\n' +
+            'Admin - P.E.T.e'
+        );
+
+    })
+    .catch(error => {
+        console.error('Error stopping scheduled scripts:', error);
+        alert('An error occurred while stopping scheduled scripts. Please try again.');
+    });
+});
+
+function pollStatus() {
+    Promise.all([
+        fetch(`${baseUrl}/status`),
+        fetch(`${baseUrl}/get_scheduled_tasks`),
+        fetch(`${baseUrl}/get_state`)
+    ])
+    .then(([statusResponse, tasksResponse, stateResponse]) =>
+        Promise.all([statusResponse.json(), tasksResponse.json(), stateResponse.json()]))
+    .then(([statusData, tasksData, stateData]) => {
+        updateConsoles(statusData);
+        updateScheduledTaskDisplay(tasksData);
+        updateButtonStates(stateData);  // This now includes is_runner_or_admin
+        setTimeout(pollStatus, 1000);
+    })
+    .catch(error => {
+        console.error('Error polling status:', error);
+        setTimeout(pollStatus, 1000);
+    });
+}
+
+function updateConsoles(statusData) {
+    Object.keys(statusData).forEach(scriptName => {
+        let status = statusData[scriptName];
+        let urlCount = extractUrlCount(status);
+        createOrUpdateConsoleDiv(scriptName, status, urlCount);
+    });
+}
+
+function updateScheduledTaskDisplay(tasks) {
+    let scheduledTaskInfo = document.getElementById('scheduled-task-info');
+    let scheduledTaskDisplay = document.getElementById('scheduled-task-display');
+
+    if (tasks && tasks.length > 0) {
+        let scriptNames = tasks.map(task => task.script_name);
+        let uniqueScriptNames = [...new Set(scriptNames)];
+        let firstTask = tasks[0];
+        let tasksInfo = `Scheduled scripts: ${uniqueScriptNames.join(', ')} for ${firstTask.run_date} at ${firstTask.run_time}`;
+
+        if (firstTask.recurrence_type === 'monthly') {
+            tasksInfo = `Scheduled scripts: ${uniqueScriptNames.join(', ')} monthly from ${firstTask.run_date} at ${firstTask.run_time}`;
+        }
+        scheduledTaskInfo.textContent = tasksInfo;
+        scheduledTaskDisplay.style.display = 'block';
+
+        updateButtonStates({
+            run_button_disabled: true,
+            stop_button_disabled: true,
+            schedule_button_disabled: true,
+            stop_schedule_button_disabled: false
+        });
+
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.disabled = true;
+        });
+    } else {
+        scheduledTaskInfo.textContent = '';
+        scheduledTaskDisplay.style.display = 'none';
+
+        updateButtonStates({
+            run_button_disabled: false,
+            stop_button_disabled: true,
+            schedule_button_disabled: false,
+            stop_schedule_button_disabled: true
+        });
+
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.disabled = false;
+        });
+    }
+
+    updateState();
+    saveState();
+}
+
+function updateState(newState) {
+    console.log("Sending state update:", newState);
+    if (!newState || Object.keys(newState).length === 0) {
+        console.warn("Attempted to update state with empty object");
+        return;
+    }
+    fetch(`${baseUrl}/update_state`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newState)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("State update response:", data);
+        updateButtonStates(data);
+    })
+    .catch(error => {
+        console.error('Error updating state:', error);
+        // Fetch current state if update fails
+        fetch(`${baseUrl}/get_state`)
+            .then(response => response.json())
+            .then(data => {
+                console.log("Fetched current state:", data);
+                updateButtonStates(data);
+            })
+            .catch(error => console.error('Error fetching state:', error));
+    });
+}
+
+function extractUrlCount(status) {
+            const match = status.match(/URLs scraped: (\d+)/);
+            return match ? parseInt(match[1]) : 0;
+        }
+
+function updateButtonStates(state) {
+    console.log('Updating button states:', state);
+    const userRoles = state.user_roles || {};
+    const isRunnerOrAdmin = userRoles.is_admin || userRoles.is_runner;
+
+    const runButton = document.getElementById('run-button');
+    const stopButton = document.getElementById('stop-button');
+    const scheduleButton = document.getElementById('schedule-button');
+    const stopScheduleButton = document.getElementById('stop-schedule-button');
+
+    runButton.disabled = !isRunnerOrAdmin || state.run_button_disabled;
+    stopButton.disabled = !isRunnerOrAdmin || state.stop_button_disabled;
+    scheduleButton.disabled = !isRunnerOrAdmin || state.schedule_button_disabled;
+    stopScheduleButton.disabled = !isRunnerOrAdmin || state.stop_schedule_button_disabled;
+
+    // Update button colors
+    [runButton, stopButton, scheduleButton, stopScheduleButton].forEach(button => {
+        button.style.backgroundColor = button.disabled ? 'grey' : '#15a65e';
+    });
+
+    // Optionally, you can add a visual indicator for non-runner/admin users
+    if (!isRunnerOrAdmin) {
+        [runButton, scheduleButton].forEach(button => {
+            button.title = "You don't have permission to perform this action";
+        });
+    } else {
+        [runButton, scheduleButton].forEach(button => {
+            button.title = "";
+        });
+    }
+}
+
+
+function saveState() {
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    const state = {
+        checkboxes: Array.from(document.querySelectorAll('input[type="checkbox"]')).map(cb => ({ id: cb.id, checked: cb.checked, disabled: cb.disabled })),
+        runButtonDisabled: document.getElementById('run-button').disabled,
+        stopButtonDisabled: document.getElementById('stop-button').disabled,
+        scheduleButtonDisabled: document.getElementById('schedule-button').disabled,
+        stopScheduleButtonDisabled: document.getElementById('stop-schedule-button').disabled,
+        startDate: document.getElementById('start-date').value,
+        startTime: document.getElementById('start-time').value,
+        recurrenceType: document.getElementById('recurrence-type').value,
+        scheduledTaskDisplay: document.getElementById('scheduled-task-display').style.display,
+        scheduledTaskInfo: document.getElementById('scheduled-task-info').textContent
+
+    };
+    localStorage.setItem('pageState', JSON.stringify(state));
+}
+
+function loadState() {
+    return new Promise((resolve, reject) => {
+        // First, fetch the current state from the server
+        fetch(`${baseUrl}/get_state`)
+            .then(response => response.json())
+            .then(serverState => {
+                console.log("Fetched server state:", serverState);
+                updateButtonStates(serverState);
+
+                // Then, load the locally saved state
+                const savedState = localStorage.getItem('pageState');
+                if (savedState) {
+                    const localState = JSON.parse(savedState);
+                    console.log("Loaded local state:", localState);
+
+                    // Restore checkboxes and other inputs
+                    localState.checkboxes.forEach(cb => {
+                        const checkbox = document.getElementById(cb.id);
+                        if (checkbox) {
+                            checkbox.checked = cb.checked;
+                            checkbox.disabled = cb.disabled;
+                        }
+                    });
+
+                    // Restore date, time, and recurrence inputs
+                    document.getElementById('start-date').value = localState.startDate;
+                    document.getElementById('start-time').value = localState.startTime;
+                    document.getElementById('recurrence-type').value = localState.recurrenceType;
+
+                    // Restore scheduled task display
+                    document.getElementById('scheduled-task-display').style.display = localState.scheduledTaskDisplay;
+                    document.getElementById('scheduled-task-info').textContent = localState.scheduledTaskInfo;
+                }
+
+                // Check server status to ensure UI is in sync
+                return fetch(`${baseUrl}/check_running_scripts`);
+            })
+            .then(response => response.json())
+            .then(runningData => {
+                console.log("Running scripts status:", runningData);
+                if (runningData.any_running) {
+                    updateButtonStates({
+                        run_button_disabled: true,
+                        stop_button_disabled: false,
+                        schedule_button_disabled: true,
+                        stop_schedule_button_disabled: true
+                    });
+                } else {
+                    return fetch(`${baseUrl}/get_scheduling_status`);
+                }
+            })
+            .then(response => response ? response.json() : null)
+            .then(schedulingData => {
+                if (schedulingData) {
+                    console.log("Scheduling status:", schedulingData);
+                    if (schedulingData.any_scheduled) {
+                        let tasksInfo = schedulingData.tasks.map(task =>
+                            `${task.script_name} scheduled for ${task.run_date} at ${task.run_time} (${task.status})`
+                        ).join(', ');
+                        document.getElementById('scheduled-task-info').textContent = tasksInfo;
+                        document.getElementById('scheduled-task-display').style.display = 'block';
+                        updateButtonStates({
+                            run_button_disabled: true,
+                            stop_button_disabled: true,
+                            schedule_button_disabled: true,
+                            stop_schedule_button_disabled: false
+                        });
+                    }
+                }
+                updateButtonColors();
+                resolve();
+            })
+            .catch(error => {
+                console.error('Error loading state:', error);
+                reject(error);
+            });
+    });
+}
+
+function updateRunnerCheckbox(username) {
+    fetch('/get_user_status?username=' + encodeURIComponent(username))
+        .then(response => response.json())
+        .then(data => {
+            const checkbox = document.querySelector(`input[name="runner"][value="${username}"]`);
+            if (checkbox) {
+                checkbox.checked = data.is_runner;
+            }
+        });
+}
+
+
+
+
+function setMinDateTime() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+
+    const dateInput = document.getElementById('start-date');
+    const timeInput = document.getElementById('start-time');
+
+    dateInput.min = `${year}-${month}-${day}`;
+
+    if (dateInput.value === dateInput.min) {
+        timeInput.min = `${hours}:${minutes}`;
+    } else {
+        timeInput.min = '';
+    }
+}
+
+function updateMinTime() {
+    const dateInput = document.getElementById('start-date');
+    const timeInput = document.getElementById('start-time');
+    const now = new Date();
+    const selectedDate = new Date(dateInput.value);
+
+    if (selectedDate.toDateString() === now.toDateString()) {
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        timeInput.min = `${hours}:${minutes}`;
+    } else {
+        timeInput.min = '';
+    }
+}
+
+function updateButtonColors() {
+    const buttons = ['run-button', 'stop-button', 'schedule-button', 'stop-schedule-button'];
+    buttons.forEach(buttonId => {
+        const button = document.getElementById(buttonId);
+        button.style.backgroundColor = button.disabled ? 'grey' : '#15a65e';
+    });
+}
+
+    function setDefaultDateTime() {
+        const now = new Date();
+
+        // Set default date
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        const day = now.getDate().toString().padStart(2, '0');
+        document.getElementById('start-date').value = `${year}-${month}-${day}`;
+
+        // Set default time
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        document.getElementById('start-time').value = `${hours}:${minutes}`;
+    }
+
+function initializeConsoleDivs(scripts) {
+    let consolesDiv = document.getElementById('consoles');
+    consolesDiv.innerHTML = ''; // Clear existing content
+    scripts.forEach(scriptName => {
+        let consoleDiv = document.createElement('div');
+        consoleDiv.id = `console-${scriptName}`;
+        consoleDiv.className = 'console-box';
+        consoleDiv.innerHTML = `
+            <h3>${scriptName}</h3>
+            <p>Status: Not started</p>
+            <p>URLs Scraped: <span class="url-count">0</span></p>
+        `;
+        consolesDiv.appendChild(consoleDiv);
+    });
+}
+
+function createOrUpdateConsoleDiv(scriptName, status, urlCount) {
+    let consolesDiv = document.getElementById('consoles');
+    let consoleDiv = document.getElementById(`console-${scriptName}`);
+
+    if (!consoleDiv) {
+        consoleDiv = document.createElement('div');
+        consoleDiv.id = `console-${scriptName}`;
+        consoleDiv.className = 'console-box';
+        consolesDiv.appendChild(consoleDiv);
+    }
+
+    let oldUrlCount = parseInt(consoleDiv.querySelector('.url-count')?.textContent || '0');
+
+    consoleDiv.innerHTML = `
+        <h3>${scriptName}</h3>
+        <p>Status: ${status}</p>
+        <p>URLs Scraped: <span class="url-count ${urlCount > oldUrlCount ? 'updated' : ''}">${urlCount}</span></p>
+    `;
+
+    if (urlCount > oldUrlCount) {
+        setTimeout(() => {
+            consoleDiv.querySelector('.url-count').classList.remove('updated');
+        }, 1000);
+    }
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+    loadState().then(() => {
+        const scheduleSection = document.getElementById('schedule-section');
+        const toggleButton = document.getElementById('toggle-schedule-button');
+
+        scheduleSection.style.display = 'none';
+        toggleButton.textContent = 'Show Schedule Options';
+        toggleButton.classList.add('collapsed');
+
+        // Initialize console divs
+        let scripts = Array.from(document.querySelectorAll('#script-form input[type="checkbox"]')).map(cb => cb.value);
+        initializeConsoleDivs(scripts);
+
+         // Start polling
+        pollStatus();
+
+        // Start updating status
+        updateStatus();
+    }).catch(error => {
+        console.error('Error loading state:', error);
+    });
+});
+
+document.getElementById('start-date').addEventListener('change', function() {
+    updateMinTime();
+    const timeInput = document.getElementById('start-time');
+    if (this.value === this.min) {
+        if (timeInput.value < timeInput.min) {
+            timeInput.value = timeInput.min;
+        }
+    }
+});
+
+document.getElementById('start-time').addEventListener('change', function() {
+    const dateInput = document.getElementById('start-date');
+    if (dateInput.value === dateInput.min && this.value < this.min) {
+        this.value = this.min;
+    }
+});
+
+socket.on('state_update', function(state) {
+    console.log('Received state update:', state);
+    updateButtonStates(state);
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const userSection = document.querySelector('.user-section');
+    const userInfo = userSection.querySelector('.user-info');
+
+    userInfo.addEventListener('click', function() {
+        userSection.classList.toggle('expanded');
+    });
+
+    const runnerCheckboxes = document.querySelectorAll('input[name="runner"]');
+    runnerCheckboxes.forEach(checkbox => {
+        updateRunnerCheckbox(checkbox.value);
+    });
+
+    // Close the dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!userSection.contains(event.target)) {
+            userSection.classList.remove('expanded');
+        }
+    });
+});
+
+window.addEventListener('DOMContentLoaded', setMinDateTime);
+
+// Update min time when date changes
+document.getElementById('start-date').addEventListener('change', updateMinTime);
+
+// Update min date and time every minute
+setInterval(setMinDateTime, 60000);
+
+    // Call the function when the page loads
+<!--    window.addEventListener('DOMContentLoaded', setDefaultDateTime);-->
+function createNotification(message) {
+    const container = document.getElementById('notification-container');
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.textContent = message;
+    container.appendChild(notification);
+
+    setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => {
+            container.removeChild(notification);
+        }, 500);
+    }, 4500);
+}
+
+// Add event listeners for socket events
+socket.on('script_started', (data) => {
+    if (data.username !== '{{ username }}') {
+        createNotification(`${data.username} started running scripts`);
+    }
+});
+
+socket.on('script_stopped', (data) => {
+    if (data.username !== '{{ username }}') {
+        createNotification(`${data.username} stopped running scripts`);
+    }
+});
+
+socket.on('script_scheduled', (data) => {
+    if (data.username !== '{{ username }}') {
+        createNotification(`${data.username} scheduled scripts`);
+    }
+});
+
+socket.on('schedule_stopped', (data) => {
+    if (data.username !== '{{ username }}') {
+        createNotification(`${data.username} stopped scheduled scripts`);
+    }
+});
+
+
+    </script>
+<div id="notification-container"></div>
+</body>
+</html>
